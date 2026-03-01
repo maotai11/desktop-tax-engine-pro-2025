@@ -1,0 +1,27 @@
+﻿const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  listClients: () => ipcRenderer.invoke('client:list'),
+  createClient: (client) => ipcRenderer.invoke('client:create', client),
+  runCalculation: (payload) => ipcRenderer.invoke('calc:run', payload),
+  saveCalculation: (record) => ipcRenderer.invoke('calc:save', record),
+  listHistory: (clientId) => ipcRenderer.invoke('calc:history', clientId),
+  searchLaws: (keyword) => ipcRenderer.invoke('laws:search', keyword),
+  getDashboardStats: () => ipcRenderer.invoke('dashboard:stats'),
+  lookupRegistryByTaxId: (taxId) => ipcRenderer.invoke('registry:lookup', taxId),
+  getCachedRegistryByTaxId: (taxId) => ipcRenderer.invoke('registry:getCached', taxId),
+  syncRegistryForAllClients: () => ipcRenderer.invoke('registry:syncClients'),
+  syncRegistryByTaxIds: (taxIds) => ipcRenderer.invoke('registry:syncTaxIds', taxIds),
+  exportPdf: (input) => ipcRenderer.invoke('report:pdf', input),
+  exportExcel: (input) => ipcRenderer.invoke('report:excel', input),
+  verifyUpdate: (zipPath) => ipcRenderer.invoke('update:verify', zipPath),
+  applyUpdate: (zipPath) => ipcRenderer.invoke('update:apply', zipPath),
+  getDataPath: () => ipcRenderer.invoke('app:dataPath'),
+  backupDb: () => ipcRenderer.invoke('app:backup'),
+  downloadOfficialLaborForm: (formKey) => ipcRenderer.invoke('laborForms:downloadOfficial', formKey),
+  getLaborFormSchemas: () => ipcRenderer.invoke('laborForms:getSchemas'),
+  exportLaborNhiMappedWord: (formType, payload) => ipcRenderer.invoke('laborForms:exportMappedWord', formType, payload),
+  exportLaborNhiDraftWord: (formType, payload) => ipcRenderer.invoke('laborForms:exportDraftWord', formType, payload),
+  exportLaborNhiPdf: (formType, payload) => ipcRenderer.invoke('laborForms:exportPdf', formType, payload),
+  exportLaborNhiOverlayPdf: (formType, payload) => ipcRenderer.invoke('laborForms:exportOverlayPdf', formType, payload),
+});
