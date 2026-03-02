@@ -70,10 +70,6 @@ npm run import:laws
 - 勞工退休金條例（N0030020）
 - 勞工退休金條例施行細則（N0030021）
 
-預設 DB 路徑：
-
-- `C:\Users\LIN\AppData\Roaming\desktop-tax-engine-pro-2025\tax-engine-pro-2025.db`
-
 ## 資料位置
 
 - SQLite DB：Electron `app.getPath('userData')` 目錄下 `tax-engine-pro-2025.db`
