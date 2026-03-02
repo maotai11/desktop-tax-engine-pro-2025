@@ -1,4 +1,4 @@
-﻿import { AppstoreOutlined, BookOutlined,  UploadOutlined } from '@ant-design/icons';
+﻿import { AppstoreOutlined, BookOutlined, HomeOutlined, UploadOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Col, Input, Layout, Menu, Row, Select, Space, Statistic, Typography, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { ModuleForm } from './components/ModuleForm';
@@ -14,9 +14,12 @@ import type { ModuleType } from './types/modules';
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 
+type ViewKey = 'home' | 'module';
+
 function App() {
   const { selectedClientId, selectedModule, setSelectedClientId, setSelectedModule, year, setYear, lastResult, setLastResult } = useAppStore();
 
+  const [activeView, setActiveView] = useState<ViewKey>('home');
   const [stats, setStats] = useState({ clients: 0, history: 0, laws: 0, registryCache: 0 });
   const [clients, setClients] = useState<any[]>([]);
   const [clientName, setClientName] = useState('');
@@ -30,6 +33,12 @@ function App() {
     { key: 'labor_nhi', label: '勞健保', icon: <AppstoreOutlined /> },
     { key: 'withholding', label: '扣繳申報', icon: <AppstoreOutlined /> },
   ], []);
+
+  const menuItems = useMemo(() => [
+    { key: 'home', label: '首頁', icon: <HomeOutlined /> },
+    { type: 'divider' as const },
+    ...moduleItems,
+  ], [moduleItems]);
 
   const refreshBaseData = async () => {
     const [clientRows, dashboard] = await Promise.all([
@@ -99,6 +108,15 @@ function App() {
     if (r.ok) message.success(`備份完成: ${r.backupPath}`);
   };
 
+  const handleMenuClick = (key: string) => {
+    if (key === 'home') {
+      setActiveView('home');
+      return;
+    }
+    setActiveView('module');
+    setSelectedModule(key as ModuleType);
+  };
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={250} theme="light">
@@ -108,9 +126,9 @@ function App() {
         </div>
         <Menu
           mode="inline"
-          selectedKeys={[selectedModule]}
-          items={moduleItems}
-          onClick={(e) => setSelectedModule(e.key as ModuleType)}
+          selectedKeys={[activeView === 'home' ? 'home' : selectedModule]}
+          items={menuItems}
+          onClick={(e) => handleMenuClick(e.key)}
         />
       </Sider>
       <Layout>
@@ -127,54 +145,66 @@ function App() {
           <Button onClick={backupDb} icon={<UploadOutlined />}>資料庫備份</Button>
         </Header>
         <Content style={{ padding: 16 }}>
-          <Row gutter={[16, 16]}>
-            <Col span={6}><Card><Statistic title="客戶數" value={stats.clients} /></Card></Col>
-            <Col span={6}><Card><Statistic title="計算紀錄" value={stats.history} /></Card></Col>
-            <Col span={6}><Card><Statistic title="法條筆數" value={stats.laws} /></Card></Col>
-            <Col span={6}><Card><Statistic title="公開資料快取" value={stats.registryCache} /></Card></Col>
+          {activeView === 'home' ? (
+            <Row gutter={[16, 16]}>
+              <Col span={6}><Card><Statistic title="客戶數" value={stats.clients} /></Card></Col>
+              <Col span={6}><Card><Statistic title="計算紀錄" value={stats.history} /></Card></Col>
+              <Col span={6}><Card><Statistic title="法條筆數" value={stats.laws} /></Card></Col>
+              <Col span={6}><Card><Statistic title="公開資料快取" value={stats.registryCache} /></Card></Col>
 
-            <Col span={24}>
-              <Alert
-                type="info"
-                showIcon
-                message="免登入模式：開啟即用，資料僅儲存於本機。"
-              />
-            </Col>
-
-            <Col span={12}>
-              <Card title="新增客戶" extra={<BookOutlined />}>
-                <Space.Compact style={{ width: '100%' }}>
-                  <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="客戶名稱" />
-                  <Input value={clientTaxId} onChange={(e) => setClientTaxId(e.target.value)} placeholder="統一編號" />
-                  <Button type="primary" onClick={createClient}>新增</Button>
-                </Space.Compact>
-              </Card>
-            </Col>
-
-            <Col span={12}>
-              <UpdatePanel />
-            </Col>
-
-            <Col span={24}>
-              <PublicRegistryPanel initialTaxId={clientTaxId} onApplyName={applyRegistryName} />
-            </Col>
-
-            <Col span={12}>
-              <ModuleForm moduleType={selectedModule} year={year} onCalculate={runCalculation} busy={busy} />
-            </Col>
-            <Col span={12}>
-              <ResultPanel result={lastResult} />
-            </Col>
-
-            {selectedModule === 'labor_nhi' && (
               <Col span={24}>
-                <LaborFormPanel />
+                <Alert
+                  type="info"
+                  showIcon
+                  message="免登入模式：開啟即用，資料僅儲存於本機。"
+                />
               </Col>
-            )}
 
-            <Col span={12}><LawSearch /></Col>
-            <Col span={12}><HistoryPanel selectedClientId={selectedClientId} /></Col>
-          </Row>
+              <Col span={12}>
+                <Card title="新增客戶" extra={<BookOutlined />}>
+                  <Space.Compact style={{ width: '100%' }}>
+                    <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="客戶名稱" />
+                    <Input value={clientTaxId} onChange={(e) => setClientTaxId(e.target.value)} placeholder="統一編號" />
+                    <Button type="primary" onClick={createClient}>新增</Button>
+                  </Space.Compact>
+                </Card>
+              </Col>
+
+              <Col span={12}>
+                <UpdatePanel />
+              </Col>
+
+              <Col span={24}>
+                <PublicRegistryPanel initialTaxId={clientTaxId} onApplyName={applyRegistryName} />
+              </Col>
+
+              <Col span={12}><LawSearch /></Col>
+              <Col span={12}><HistoryPanel selectedClientId={selectedClientId} /></Col>
+            </Row>
+          ) : (
+            <Row gutter={[16, 16]}>
+              <Col span={24}>
+                <Alert
+                  type="success"
+                  showIcon
+                  message="計算模式：僅顯示模組輸入與結果；共用查詢與客戶管理請回首頁。"
+                />
+              </Col>
+
+              <Col span={12}>
+                <ModuleForm moduleType={selectedModule} year={year} onCalculate={runCalculation} busy={busy} />
+              </Col>
+              <Col span={12}>
+                <ResultPanel result={lastResult} />
+              </Col>
+
+              {selectedModule === 'labor_nhi' && (
+                <Col span={24}>
+                  <LaborFormPanel />
+                </Col>
+              )}
+            </Row>
+          )}
         </Content>
       </Layout>
     </Layout>

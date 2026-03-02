@@ -46,7 +46,8 @@ interface Window {
     runCalculation: (payload: CalculationPayload) => Promise<unknown>;
     saveCalculation: (record: CalculationRecord) => Promise<{ id: number }>;
     listHistory: (clientId?: number) => Promise<any[]>;
-    searchLaws: (keyword: string) => Promise<LawResult[]>;
+    searchLaws: (query: { keyword?: string; lawName?: string }) => Promise<LawResult[]>;
+    listLawNames: () => Promise<string[]>;
     getDashboardStats: () => Promise<DashboardStats>;
     lookupRegistryByTaxId: (taxId: string) => Promise<{ ok: boolean; cached?: boolean; message?: string; data?: any }>;
     getCachedRegistryByTaxId: (taxId: string) => Promise<{ ok: boolean; data?: any }>;

@@ -163,18 +163,48 @@ const dbApi = {
     }
     return db.prepare('SELECT * FROM calculation_history ORDER BY id DESC LIMIT 100').all();
   },
-  searchLaws: (keyword) => {
-    const q = keyword && keyword.trim().length > 0 ? keyword.trim() : '*';
+  listLawNames: () => db.prepare('SELECT DISTINCT law_name FROM laws ORDER BY law_name').all().map((r) => r.law_name),
+  searchLaws: (query) => {
+    const keyword = String(
+      typeof query === 'string'
+        ? query
+        : query && typeof query === 'object' && 'keyword' in query
+          ? query.keyword || ''
+          : ''
+    ).trim();
+    const lawName = String(
+      query && typeof query === 'object' && 'lawName' in query
+        ? query.lawName || ''
+        : ''
+    ).trim();
+
+    const likeKeyword = `%${keyword}%`;
     return db
       .prepare(
         `SELECT l.id, l.law_name, l.article_number, l.title, l.content
-         FROM laws_fts f
-         JOIN laws l ON l.id = f.rowid
-         WHERE laws_fts MATCH ?
-         ORDER BY rank
-         LIMIT 50`
+         FROM laws l
+         WHERE (? = '' OR l.law_name = ?)
+           AND (
+             ? = ''
+             OR l.law_name LIKE ?
+             OR l.article_number LIKE ?
+             OR l.title LIKE ?
+             OR l.content LIKE ?
+             OR IFNULL(l.tags, '') LIKE ?
+           )
+         ORDER BY l.law_name, CAST(l.article_number AS INTEGER), l.article_number
+         LIMIT 300`
       )
-      .all(q);
+      .all(
+        lawName,
+        lawName,
+        keyword,
+        likeKeyword,
+        likeKeyword,
+        likeKeyword,
+        likeKeyword,
+        likeKeyword
+      );
   },
   getDashboardStats: () => {
     const clients = db.prepare('SELECT COUNT(*) AS c FROM clients').get().c;

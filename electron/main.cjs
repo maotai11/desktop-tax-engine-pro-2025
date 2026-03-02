@@ -82,7 +82,8 @@ ipcMain.handle('client:create', async (_evt, client) => dbApi.createClient(clien
 ipcMain.handle('calc:run', async (_evt, payload) => runCalculation(payload));
 ipcMain.handle('calc:save', async (_evt, record) => dbApi.saveCalculation(record));
 ipcMain.handle('calc:history', async (_evt, clientId) => dbApi.listHistory(clientId));
-ipcMain.handle('laws:search', async (_evt, keyword) => dbApi.searchLaws(keyword));
+ipcMain.handle('laws:search', async (_evt, query) => dbApi.searchLaws(query));
+ipcMain.handle('laws:listNames', async () => dbApi.listLawNames());
 ipcMain.handle('dashboard:stats', async () => dbApi.getDashboardStats());
 ipcMain.handle('registry:lookup', async (_evt, taxId) => {
   try {
