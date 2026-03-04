@@ -1,7 +1,7 @@
 {
   "name": "desktop-tax-engine-pro-2025",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -13,7 +13,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "postinstall": "electron-builder install-app-deps",
-    "import:laws": "node scripts/import-laws-from-moj.cjs"
+    "import:laws": "node scripts/import-laws-from-moj.cjs",
+    "sync:registry": "node scripts/sync-registry-cache.cjs",
+    "import:tax-registry-full": "node scripts/import-tax-registry-full.cjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

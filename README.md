@@ -70,6 +70,26 @@ npm run import:laws
 - 勞工退休金條例（N0030020）
 - 勞工退休金條例施行細則（N0030021）
 
+預設 DB 路徑：
+
+- `C:\Users\LIN\AppData\Roaming\desktop-tax-engine-pro-2025\tax-engine-pro-2025.db`
+
+## 匯入全量稅籍資料（統編離線查詢）
+
+先下載官方全量 ZIP（政府資料開放平台）：
+
+- `https://eip.fia.gov.tw/data/BGMOPEN1.zip`
+
+再執行匯入：
+
+```bash
+npm run import:tax-registry-full -- --zip=C:\path\to\BGMOPEN1.zip
+```
+
+說明：
+
+- 會把全量統編資料寫入 `public_registry_cache`，可供離線依統編查詢
+- 若要保留既有快取並做增量覆蓋，可加參數 `--keep-existing=1`
 ## 資料位置
 
 - SQLite DB：Electron `app.getPath('userData')` 目錄下 `tax-engine-pro-2025.db`
