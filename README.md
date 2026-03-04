@@ -35,6 +35,10 @@ npm run dev
 npm run build:win
 ```
 
+`dist/win-unpacked/Tax Engine Pro 2025.exe` 可免安裝直接執行（需保留整個 `win-unpacked` 目錄）。
+
+離線資料庫若放在 `exe` 同資料夾、檔名為 `tax-engine-pro-2025.db`，程式會優先使用該檔案。
+
 ## 產生測試更新包
 
 ```bash

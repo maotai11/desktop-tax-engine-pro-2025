@@ -1,11 +1,16 @@
 ﻿const path = require('path');
+const fs = require('fs');
 const Database = require('better-sqlite3');
 
 let db;
 let dbPath;
 
-function initDatabase(userDataPath) {
-  dbPath = path.join(userDataPath, 'tax-engine-pro-2025.db');
+function initDatabase(userDataPath, options = {}) {
+  dbPath = options.dbPath
+    ? path.resolve(options.dbPath)
+    : path.join(userDataPath, 'tax-engine-pro-2025.db');
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');

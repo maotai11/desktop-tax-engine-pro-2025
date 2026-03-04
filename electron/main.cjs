@@ -11,6 +11,17 @@ const { lookupRegistryByTaxId } = require('./public-registry.cjs');
 const isDev = !app.isPackaged;
 let logFilePath = '';
 
+function resolveDatabasePath() {
+  const defaultDbPath = path.join(app.getPath('userData'), 'tax-engine-pro-2025.db');
+  if (isDev) return defaultDbPath;
+
+  const exeDir = path.dirname(app.getPath('exe'));
+  const localDbPath = path.join(exeDir, 'tax-engine-pro-2025.db');
+  if (fs.existsSync(localDbPath)) return localDbPath;
+
+  return defaultDbPath;
+}
+
 function logLine(message) {
   try {
     const line = `[${new Date().toISOString()}] ${message}\n`;
@@ -55,8 +66,9 @@ app.whenReady().then(() => {
   if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
   logFilePath = path.join(logDir, `startup-${new Date().toISOString().slice(0, 10)}.log`);
   logLine('app ready');
-  initDatabase(app.getPath('userData'));
-  logLine('database initialized');
+  const dbPath = resolveDatabasePath();
+  initDatabase(app.getPath('userData'), { dbPath });
+  logLine(`database initialized: ${dbPath}`);
   createWindow();
 
   app.on('activate', () => {
