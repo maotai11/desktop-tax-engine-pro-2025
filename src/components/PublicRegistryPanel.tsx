@@ -1,5 +1,6 @@
-﻿import { Alert, Button, Card, Descriptions, Input, List, Space, Tag, Typography, message } from 'antd';
+import { Alert, Button, Card, Descriptions, Input, List, Space, Tag, Typography, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import type { PublicRegistryData, PublicRegistryItem } from '../types/app';
 
 const { Text } = Typography;
 
@@ -19,14 +20,17 @@ export function PublicRegistryPanel({ initialTaxId, onApplyName }: Props) {
   const [batchInput, setBatchInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<PublicRegistryData | null>(null);
   const [notice, setNotice] = useState<string>('');
 
   useEffect(() => {
     if (initialTaxId) setTaxId(initialTaxId);
   }, [initialTaxId]);
 
-  const items = useMemo(() => result?.businessItems || result?.business_items || [], [result]);
+  const items = useMemo<PublicRegistryItem[]>(() => {
+    if (!result) return [];
+    return result.businessItems || result.business_items || [];
+  }, [result]);
 
   const lookup = async () => {
     const cleaned = taxId.replace(/\D/g, '');
@@ -36,7 +40,7 @@ export function PublicRegistryPanel({ initialTaxId, onApplyName }: Props) {
     setNotice('');
     try {
       const res = await window.electronAPI.lookupRegistryByTaxId(cleaned);
-      if (!res.ok) {
+      if (!res.ok || !res.data) {
         message.error(res.message || '查詢失敗');
         return;
       }
@@ -47,9 +51,9 @@ export function PublicRegistryPanel({ initialTaxId, onApplyName }: Props) {
       } else {
         message.success('已取得最新公開資料並快取到本機');
       }
-      if (onApplyName && res.data?.entity_name) {
+      if (onApplyName && res.data.entity_name) {
         onApplyName(cleaned, res.data.entity_name);
-      } else if (onApplyName && res.data?.entityName) {
+      } else if (onApplyName && res.data.entityName) {
         onApplyName(cleaned, res.data.entityName);
       }
     } finally {
@@ -97,10 +101,10 @@ export function PublicRegistryPanel({ initialTaxId, onApplyName }: Props) {
   const type = result?.entityType || result?.entity_type || '-';
 
   return (
-    <Card title="公開資料整合（公司/行號）" extra={<Button onClick={syncAllClients} loading={syncing}>同步全部客戶統編</Button>}>
+    <Card title="公開資料整合（公司/行號）" extra={<Button onClick={() => void syncAllClients()} loading={syncing}>同步全部客戶統編</Button>}>
       <Space.Compact style={{ width: '100%', marginBottom: 12 }}>
         <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="輸入統編（8碼）" />
-        <Button type="primary" loading={loading} onClick={lookup}>查詢並快取</Button>
+        <Button type="primary" loading={loading} onClick={() => void lookup()}>查詢並快取</Button>
       </Space.Compact>
 
       <Input.TextArea
@@ -111,7 +115,7 @@ export function PublicRegistryPanel({ initialTaxId, onApplyName }: Props) {
         style={{ marginBottom: 8 }}
       />
       <Space style={{ marginBottom: 12 }}>
-        <Button onClick={syncBatchTaxIds} loading={syncing}>批次同步輸入統編</Button>
+        <Button onClick={() => void syncBatchTaxIds()} loading={syncing}>批次同步輸入統編</Button>
         <Button onClick={() => setBatchInput('')}>清空批量欄位</Button>
       </Space>
 
@@ -141,7 +145,7 @@ export function PublicRegistryPanel({ initialTaxId, onApplyName }: Props) {
               style={{ marginTop: 8, maxHeight: 240, overflow: 'auto' }}
               dataSource={items}
               locale={{ emptyText: '查無營業項目' }}
-              renderItem={(it: any) => (
+              renderItem={(it) => (
                 <List.Item>
                   <Text code>{it.itemCode || it.item_code || '-'}</Text>
                   <Text>{it.itemDesc || it.item_desc || '-'}</Text>

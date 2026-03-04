@@ -89,7 +89,7 @@ async function main() {
     throw new Error('請提供 --csv 或 --zip');
   }
 
-  initDatabase(path.dirname(dbPath));
+  initDatabase(path.dirname(dbPath), { dbPath });
   const activeDbPath = path.resolve(dbApi.getDbPath());
 
   const Database = require('better-sqlite3');

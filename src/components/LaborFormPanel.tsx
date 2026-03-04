@@ -1,4 +1,4 @@
-﻿import { Button, Card, Col, Form, Input, Row, Select, Space, Typography, message } from 'antd';
+import { Button, Card, Col, Form, Input, Row, Select, Space, Typography, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 
 const { Text } = Typography;
@@ -49,17 +49,23 @@ export function LaborFormPanel() {
   const [externalInput, setExternalInput] = useState('');
 
   useEffect(() => {
+    let active = true;
     void (async () => {
       const data = await window.electronAPI.getLaborFormSchemas();
+      if (!active) return;
       setSchemas(data);
       const first = Object.keys(data)[0];
-      if (first && !data[formType]) setFormType(first);
+      setFormType((prev) => (data[prev] ? prev : first || prev));
     })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const current = schemas[formType];
-  const fields = current?.fields || [];
-  const canOverlayPdf = (current?.officialDownloadKeys || []).includes('laborNhiCombined_pdf');
+  const fields = useMemo(() => current?.fields ?? [], [current]);
+  const downloadKeys = useMemo(() => current?.officialDownloadKeys ?? [], [current]);
+  const canOverlayPdf = downloadKeys.includes('laborNhiCombined_pdf');
 
   const initialJson = useMemo(() => {
     const obj: Record<string, string> = {};
@@ -69,7 +75,7 @@ export function LaborFormPanel() {
 
   useEffect(() => {
     form.resetFields();
-  }, [formType]);
+  }, [form, formType]);
 
   const downloadOfficial = async (key: string) => {
     setLoadingKey(key);
@@ -156,9 +162,9 @@ export function LaborFormPanel() {
         <div>
           <Text strong>1) 下載官方表格</Text>
           <Row gutter={[8, 8]} style={{ marginTop: 8 }}>
-            {(current?.officialDownloadKeys || []).map((key) => (
+            {downloadKeys.map((key) => (
               <Col key={key} span={8}>
-                <Button block loading={loadingKey === key} onClick={() => downloadOfficial(key)}>
+                <Button block loading={loadingKey === key} onClick={() => void downloadOfficial(key)}>
                   {DOWNLOAD_LABELS[key] || key}
                 </Button>
               </Col>
@@ -199,10 +205,10 @@ export function LaborFormPanel() {
 
         <div>
           <Space>
-            <Button type="primary" onClick={exportMappedWord} loading={exporting}>生成 1:1 套入版 Word</Button>
-            <Button onClick={exportDraftWord} loading={exporting}>生成可編輯草稿 Word</Button>
-            <Button onClick={exportPdf} loading={exporting}>列印用 PDF</Button>
-            <Button disabled={!canOverlayPdf} onClick={exportOverlayPdf} loading={exporting}>官方 PDF 座標套印版</Button>
+            <Button type="primary" onClick={() => void exportMappedWord()} loading={exporting}>生成 1:1 套入版 Word</Button>
+            <Button onClick={() => void exportDraftWord()} loading={exporting}>生成可編輯草稿 Word</Button>
+            <Button onClick={() => void exportPdf()} loading={exporting}>列印用 PDF</Button>
+            <Button disabled={!canOverlayPdf} onClick={() => void exportOverlayPdf()} loading={exporting}>官方 PDF 座標套印版</Button>
           </Space>
           {!canOverlayPdf && <div><Text type="secondary">此表單目前無官方 PDF 套印模板，請用 Word 套入或草稿版。</Text></div>}
         </div>

@@ -1,11 +1,7 @@
-ï»¿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const AdmZip = require('adm-zip');
-const crypto = require('crypto');
-
-function hash(input) {
-  return crypto.createHash('sha256').update(input).digest('hex');
-}
+const { computeManifestSha256 } = require('../electron/update-package.cjs');
 
 const outDir = path.join(process.cwd(), 'resources');
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
@@ -16,15 +12,15 @@ const manifest = {
   minAppVersion: '0.0.0',
   manifestSha256: '',
 };
-manifest.manifestSha256 = hash(JSON.stringify(manifest));
+manifest.manifestSha256 = computeManifestSha256(manifest);
 
 const laws = [
   {
-    lawName: 'æ‰€å¾—ç¨…æ³•',
+    lawName: '©Ò±oµ|ªk',
     articleNumber: '120',
-    title: 'ç¤ºç¯„æ›´æ–°æ¢æ–‡',
-    content: 'æ­¤ç‚ºé›¢ç·šæ›´æ–°åŒ…æ¸¬è©¦æ¢æ–‡ã€‚',
-    tags: 'æ¸¬è©¦,æ›´æ–°åŒ…',
+    title: '¥Ü½d§ó·s±ø¤å',
+    content: '¦¹¬°Â÷½u§ó·s¥]´ú¸Õ±ø¤å¡C',
+    tags: '´ú¸Õ,§ó·s¥]',
     effectiveDate: '2025-03-01',
   },
 ];

@@ -1,5 +1,6 @@
-﻿import { Button, Card, Input, List, Select, Space, Typography } from 'antd';
-import { useEffect, useState } from 'react';
+import { Button, Card, Input, List, Select, Space, Typography } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import type { LawResult } from '../types/app';
 
 const { Paragraph, Text } = Typography;
 
@@ -7,10 +8,10 @@ export function LawSearch() {
   const [keyword, setKeyword] = useState('');
   const [lawName, setLawName] = useState<string | undefined>(undefined);
   const [lawNames, setLawNames] = useState<string[]>([]);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<LawResult[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const runSearch = async (nextKeyword = keyword, nextLawName = lawName) => {
+  const runSearch = useCallback(async (nextKeyword: string, nextLawName?: string) => {
     setLoading(true);
     try {
       const rows = await window.electronAPI.searchLaws({
@@ -21,7 +22,7 @@ export function LawSearch() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const resetSearch = async () => {
     setKeyword('');
@@ -36,7 +37,7 @@ export function LawSearch() {
       await runSearch('', undefined);
     };
     void init();
-  }, []);
+  }, [runSearch]);
 
   return (
     <Card title="法規查詢">
@@ -52,7 +53,7 @@ export function LawSearch() {
         />
         <Space.Compact style={{ width: '100%' }}>
           <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="輸入關鍵字或條號" />
-          <Button type="primary" loading={loading} onClick={() => void runSearch()}>
+          <Button type="primary" loading={loading} onClick={() => void runSearch(keyword, lawName)}>
             搜尋
           </Button>
           <Button onClick={() => void resetSearch()}>
@@ -69,7 +70,7 @@ export function LawSearch() {
         bordered
         size="small"
         dataSource={results}
-        renderItem={(row: any) => (
+        renderItem={(row) => (
           <List.Item>
             <div>
               <Text strong>{row.law_name} 第{row.article_number}條 - {row.title}</Text>

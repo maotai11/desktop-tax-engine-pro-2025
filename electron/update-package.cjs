@@ -7,6 +7,11 @@ function sha256(input) {
   return crypto.createHash('sha256').update(input).digest('hex');
 }
 
+function computeManifestSha256(manifest) {
+  const { manifestSha256, ...unsignedManifest } = manifest || {};
+  return sha256(JSON.stringify(unsignedManifest));
+}
+
 function verifyUpdatePackage(zipPath) {
   if (!fs.existsSync(zipPath)) {
     return { ok: false, message: '找不到更新包檔案' };
@@ -19,8 +24,14 @@ function verifyUpdatePackage(zipPath) {
   }
 
   const manifest = JSON.parse(zip.readAsText('manifest.json'));
-  const computed = sha256(zip.readAsText('manifest.json'));
-  const valid = !manifest.manifestSha256 || manifest.manifestSha256 === computed;
+  if (!manifest || typeof manifest !== 'object') {
+    return { ok: false, message: 'manifest 格式錯誤' };
+  }
+  if (typeof manifest.manifestSha256 !== 'string' || !manifest.manifestSha256.trim()) {
+    return { ok: false, message: 'manifest checksum 缺失' };
+  }
+  const computed = computeManifestSha256(manifest);
+  const valid = manifest.manifestSha256 === computed;
 
   return {
     ok: valid,
@@ -58,4 +69,4 @@ function applyUpdatePackage(zipPath, dbApi) {
   }
 }
 
-module.exports = { verifyUpdatePackage, applyUpdatePackage };
+module.exports = { verifyUpdatePackage, applyUpdatePackage, computeManifestSha256 };

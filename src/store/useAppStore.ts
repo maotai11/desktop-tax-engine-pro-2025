@@ -1,16 +1,16 @@
-﻿import { create } from 'zustand';
-
-type ModuleType = 'corp_income' | 'vat' | 'personal_income' | 'labor_nhi' | 'withholding';
+import { create } from 'zustand';
+import type { CalculationResult } from '../types/app';
+import type { ModuleType } from '../types/modules';
 
 interface AppState {
   selectedClientId?: number;
   selectedModule: ModuleType;
   year: number;
-  lastResult: any;
+  lastResult: CalculationResult | null;
   setSelectedClientId: (id?: number) => void;
   setSelectedModule: (module: ModuleType) => void;
   setYear: (year: number) => void;
-  setLastResult: (result: any) => void;
+  setLastResult: (result: CalculationResult | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({

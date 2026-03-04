@@ -1,6 +1,6 @@
-﻿import { AppstoreOutlined, BookOutlined, HomeOutlined, UploadOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, BookOutlined, HomeOutlined, UploadOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Col, Input, Layout, Menu, Row, Select, Space, Statistic, Typography, message } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ModuleForm } from './components/ModuleForm';
 import { ResultPanel } from './components/ResultPanel';
 import { LawSearch } from './components/LawSearch';
@@ -9,6 +9,7 @@ import { HistoryPanel } from './components/HistoryPanel';
 import { LaborFormPanel } from './components/LaborFormPanel';
 import { PublicRegistryPanel } from './components/PublicRegistryPanel';
 import { useAppStore } from './store/useAppStore';
+import type { CalculationResult, TaxClient } from './types/app';
 import type { ModuleType } from './types/modules';
 
 const { Header, Sider, Content } = Layout;
@@ -21,7 +22,7 @@ function App() {
 
   const [activeView, setActiveView] = useState<ViewKey>('home');
   const [stats, setStats] = useState({ clients: 0, history: 0, laws: 0, registryCache: 0 });
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<TaxClient[]>([]);
   const [clientName, setClientName] = useState('');
   const [clientTaxId, setClientTaxId] = useState('');
   const [busy, setBusy] = useState(false);
@@ -40,7 +41,7 @@ function App() {
     ...moduleItems,
   ], [moduleItems]);
 
-  const refreshBaseData = async () => {
+  const refreshBaseData = useCallback(async () => {
     const [clientRows, dashboard] = await Promise.all([
       window.electronAPI.listClients(),
       window.electronAPI.getDashboardStats(),
@@ -53,11 +54,11 @@ function App() {
       registryCache: dashboard.registryCache || 0,
     });
     if (!selectedClientId && clientRows.length) setSelectedClientId(clientRows[0].id);
-  };
+  }, [selectedClientId, setSelectedClientId]);
 
   useEffect(() => {
     void refreshBaseData();
-  }, []);
+  }, [refreshBaseData]);
 
   const runCalculation = async (input: Record<string, number>) => {
     setBusy(true);
@@ -66,7 +67,7 @@ function App() {
         moduleType: selectedModule,
         year,
         input,
-      });
+      }) as CalculationResult;
       setLastResult(result);
       await window.electronAPI.saveCalculation({
         clientId: selectedClientId,
@@ -105,7 +106,7 @@ function App() {
 
   const backupDb = async () => {
     const r = await window.electronAPI.backupDb();
-    if (r.ok) message.success(`備份完成: ${r.backupPath}`);
+    if (r.ok && r.backupPath) message.success(`備份完成: ${r.backupPath}`);
   };
 
   const handleMenuClick = (key: string) => {

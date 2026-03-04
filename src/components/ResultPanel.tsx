@@ -1,8 +1,9 @@
-﻿import { Card, List, Typography } from 'antd';
+import { Card, List, Typography } from 'antd';
+import type { CalculationResult } from '../types/app';
 
 const { Text } = Typography;
 
-export function ResultPanel({ result }: { result: any }) {
+export function ResultPanel({ result }: { result: CalculationResult | null }) {
   if (!result) {
     return <Card title="計算結果">尚未計算</Card>;
   }
