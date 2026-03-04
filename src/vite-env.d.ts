@@ -88,9 +88,19 @@ interface DashboardStats {
   registryCache?: number;
 }
 
+interface AppInitStatus {
+  ready: boolean;
+  phase: string;
+  message: string;
+  progress: number;
+  error: string | null;
+}
+
 declare global {
   interface Window {
     electronAPI: {
+      getAppInitStatus: () => Promise<AppInitStatus>;
+      onAppInitStatus: (callback: (status: AppInitStatus) => void) => () => void;
       listClients: () => Promise<TaxClient[]>;
       createClient: (client: { taxId: string; name: string; type?: string }) => Promise<TaxClient>;
       runCalculation: (payload: CalculationPayload) => Promise<CalculationResult>;

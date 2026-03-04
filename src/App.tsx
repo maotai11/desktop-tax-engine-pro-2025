@@ -1,5 +1,5 @@
 import { AppstoreOutlined, BookOutlined, HomeOutlined, UploadOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Col, Input, Layout, Menu, Row, Select, Space, Statistic, Typography, message } from 'antd';
+import { Alert, Button, Card, Col, Input, Layout, Menu, Progress, Row, Select, Space, Statistic, Typography, message } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ModuleForm } from './components/ModuleForm';
 import { ResultPanel } from './components/ResultPanel';
@@ -16,6 +16,7 @@ const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 
 type ViewKey = 'home' | 'module';
+type InitStatus = { ready: boolean; phase: string; message: string; progress: number; error: string | null };
 
 function App() {
   const { selectedClientId, selectedModule, setSelectedClientId, setSelectedModule, year, setYear, lastResult, setLastResult } = useAppStore();
@@ -26,6 +27,13 @@ function App() {
   const [clientName, setClientName] = useState('');
   const [clientTaxId, setClientTaxId] = useState('');
   const [busy, setBusy] = useState(false);
+  const [initStatus, setInitStatus] = useState<InitStatus>({
+    ready: false,
+    phase: 'boot',
+    message: '啟動中',
+    progress: 0,
+    error: null,
+  });
 
   const moduleItems = useMemo(() => [
     { key: 'corp_income', label: '營利事業所得稅', icon: <AppstoreOutlined /> },
@@ -57,8 +65,24 @@ function App() {
   }, [selectedClientId, setSelectedClientId]);
 
   useEffect(() => {
+    let mounted = true;
+    const unsubscribe = window.electronAPI.onAppInitStatus((status) => {
+      if (!mounted) return;
+      setInitStatus(status);
+    });
+    void window.electronAPI.getAppInitStatus().then((status) => {
+      if (mounted) setInitStatus(status);
+    });
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!initStatus.ready) return;
     void refreshBaseData();
-  }, [refreshBaseData]);
+  }, [initStatus.ready, refreshBaseData]);
 
   const runCalculation = async (input: Record<string, number>) => {
     setBusy(true);
@@ -117,6 +141,27 @@ function App() {
     setActiveView('module');
     setSelectedModule(key as ModuleType);
   };
+
+  if (!initStatus.ready) {
+    return (
+      <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
+        <Content style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Card style={{ width: 540 }} title="Tax Engine Pro 2025">
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              <Text>{initStatus.message || '載入中...'}</Text>
+              <Progress
+                percent={Math.max(1, Math.min(100, Math.round(initStatus.progress)))}
+                status={initStatus.error ? 'exception' : 'active'}
+                strokeColor={initStatus.error ? undefined : '#1677ff'}
+              />
+              {initStatus.error && <Alert type="error" showIcon message={initStatus.error} />}
+              {!initStatus.error && <Text type="secondary">正在啟動元件與資料庫，請稍候。</Text>}
+            </Space>
+          </Card>
+        </Content>
+      </Layout>
+    );
+  }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

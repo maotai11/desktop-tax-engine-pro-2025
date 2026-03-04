@@ -1,6 +1,12 @@
 ﻿const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  getAppInitStatus: () => ipcRenderer.invoke('app:init-status'),
+  onAppInitStatus: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('app:init-progress', listener);
+    return () => ipcRenderer.removeListener('app:init-progress', listener);
+  },
   listClients: () => ipcRenderer.invoke('client:list'),
   createClient: (client) => ipcRenderer.invoke('client:create', client),
   runCalculation: (payload) => ipcRenderer.invoke('calc:run', payload),
