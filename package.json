@@ -9,7 +9,8 @@
     "dev:renderer": "vite",
     "dev:electron": "wait-on tcp:5173 && electron .",
     "build": "tsc -b && vite build",
-    "build:win": "npm run build && electron-builder --win nsis",
+    "rebuild:native": "electron-builder install-app-deps",
+    "build:win": "npm run rebuild:native && npm run build && electron-builder --win nsis",
     "lint": "eslint .",
     "preview": "vite preview",
     "postinstall": "electron-builder install-app-deps",
@@ -61,7 +62,7 @@
   "build": {
     "appId": "com.taxengine.pro2025",
     "productName": "Tax Engine Pro 2025",
-    "npmRebuild": false,
+    "npmRebuild": true,
     "files": [
       "dist/**/*",
       "electron/**/*",

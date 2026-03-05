@@ -35,6 +35,8 @@ npm run dev
 npm run build:win
 ```
 
+`build:win` 會先執行 native module 重建（`electron-builder install-app-deps`），避免 `better-sqlite3` 因 Node/Electron ABI 不一致而在目標機器啟動失敗。
+
 `dist/win-unpacked/Tax Engine Pro 2025.exe` 可免安裝直接執行（需保留整個 `win-unpacked` 目錄）。
 
 離線資料庫若放在 `exe` 同資料夾、檔名為 `tax-engine-pro-2025.db`，程式會優先使用該檔案。
